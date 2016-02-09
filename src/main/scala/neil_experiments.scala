@@ -28,7 +28,7 @@ object neil_experiments {
 
   val datasets = Seq("train", "test", "val")
 
-  def main(args: Array[String]) {
+  def NOT_main(args: Array[String]) {
     val car_images = fileUtil.readLinesFromFile("/home/mg1/data/neil/car_images.tsv").toSet
     val suffix = "_car"
     copy_and_fix_data(car_images, suffix)

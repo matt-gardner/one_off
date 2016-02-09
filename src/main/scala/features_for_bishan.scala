@@ -13,7 +13,7 @@ object features_for_bishan {
   val graphBase = "/home/mg1/data/bishan/doc_graph/"
   val outDirectory = "/home/mg1/data/bishan/split/"
 
-  def main(args: Array[String]) {
+  def NOT_main(args: Array[String]) {
     val edgelists = fileUtil.recursiveListFiles(new File(graphBase), """.*\.edgelist$""".r)
     val relations = edgelists.par.map(edgelistFile => {
       val (graph, instances) = processEdgeListFile(edgelistFile)
