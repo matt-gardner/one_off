@@ -2,16 +2,15 @@ package edu.cmu.ml.rtw.users.matt.one_off
 
 import edu.cmu.ml.rtw.users.matt.util.FileUtil
 
-import scala.collection.JavaConverters._
 import scala.collection.mutable
 
 object merge_parafac_matrices {
   val fileUtil = new FileUtil
 
   def loadParafacDir(dir: String): Map[Int, Seq[(Int, Int, Double)]] = {
-    fileUtil.listDirectoryContents(dir).asScala.par.map(filename => {
+    fileUtil.listDirectoryContents(dir).par.map(filename => {
       val rel_index = filename.split("slice")(1).split("-")(0).toInt
-      val entries = fileUtil.readLinesFromFile(dir + filename).asScala.map(line => {
+      val entries = fileUtil.readLinesFromFile(dir + filename).map(line => {
         val fields = line.split("\t")
         (fields(0).toInt, fields(1).toInt, fields(2).toDouble)
       }).toSeq
@@ -24,7 +23,7 @@ object merge_parafac_matrices {
     var current_relation = -1
     val matrices = new mutable.HashMap[Int, Seq[(Int, Int, Double)]]
     var entries: mutable.ArrayBuffer[(Int, Int, Double)] = null
-    for (line <- fileUtil.readLinesFromFile(filename).asScala) {
+    for (line <- fileUtil.readLinesFromFile(filename)) {
       if (line.startsWith("Relation")) {
         if (current_relation != -1) {
           matrices += (current_relation -> entries.toSeq)
@@ -71,7 +70,7 @@ object merge_parafac_matrices {
 
     fileUtil.mkdirOrDie(out_dir)
     val parafac_entries = loadParafacDir(parafac_dir)
-    val matrix_files = fileUtil.listDirectoryContents(matrix_dir).asScala
+    val matrix_files = fileUtil.listDirectoryContents(matrix_dir)
     println(matrix_files)
     matrix_files.par.map(matrix_file => {
       val matrix_entries = readMatrixFile(matrix_dir + matrix_file)

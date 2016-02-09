@@ -2,8 +2,6 @@ package edu.cmu.ml.rtw.users.matt.one_off
 
 import edu.cmu.ml.rtw.users.matt.util.FileUtil
 
-import scala.collection.JavaConverters._
-
 object fix_arvinds_split {
 
   val relations = Seq(
@@ -71,29 +69,29 @@ object fix_arvinds_split {
       val dev_relation_dir = dev_split_dir + relation + "/"
       fileUtil.mkdirs(relation_dir)
       fileUtil.mkdirs(dev_relation_dir)
-      val training_lines = fileUtil.readLinesFromFile(to_read_dir + pos).asScala.map(line => {
+      val training_lines = fileUtil.readLinesFromFile(to_read_dir + pos).map(line => {
           val fields = line.split("\t")
           fields.take(2).mkString("\t") + "\t1"
         }) ++
-        fileUtil.readLinesFromFile(to_read_dir + neg).asScala.map(line => {
+        fileUtil.readLinesFromFile(to_read_dir + neg).map(line => {
           val fields = line.split("\t")
           fields.take(2).mkString("\t") + "\t-1"
         })
-      val dev_lines = fileUtil.readLinesFromFile(to_read_dir + dev).asScala.map(line => {
+      val dev_lines = fileUtil.readLinesFromFile(to_read_dir + dev).map(line => {
         val fields = line.split("\t")
         fields.take(2).mkString("\t") + "\t" + fields.last
       })
-      val testing_lines = fileUtil.readLinesFromFile(to_read_dir + test).asScala.map(line => {
+      val testing_lines = fileUtil.readLinesFromFile(to_read_dir + test).map(line => {
         val fields = line.split("\t")
         fields.take(2).mkString("\t") + "\t" + fields.last
       })
-      fileUtil.writeLinesToFile(dev_relation_dir + "training.tsv", training_lines.asJava)
-      fileUtil.writeLinesToFile(dev_relation_dir + "testing.tsv", dev_lines.asJava)
-      fileUtil.writeLinesToFile(relation_dir + "training.tsv", training_lines.asJava)
-      fileUtil.writeLinesToFile(relation_dir + "testing.tsv", testing_lines.asJava)
+      fileUtil.writeLinesToFile(dev_relation_dir + "training.tsv", training_lines)
+      fileUtil.writeLinesToFile(dev_relation_dir + "testing.tsv", dev_lines)
+      fileUtil.writeLinesToFile(relation_dir + "training.tsv", training_lines)
+      fileUtil.writeLinesToFile(relation_dir + "testing.tsv", testing_lines)
       println(s"Done processing relation $relation")
     })
-    fileUtil.writeLinesToFile(split_dir + "relations_to_run.tsv", relations.asJava)
-    fileUtil.writeLinesToFile(dev_split_dir + "relations_to_run.tsv", relations.asJava)
+    fileUtil.writeLinesToFile(split_dir + "relations_to_run.tsv", relations)
+    fileUtil.writeLinesToFile(dev_split_dir + "relations_to_run.tsv", relations)
   }
 }

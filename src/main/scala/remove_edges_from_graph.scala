@@ -1,10 +1,10 @@
 package edu.cmu.ml.rtw.users.matt.one_off
 
+import edu.cmu.ml.rtw.pra.experiments.Outputter
 import edu.cmu.ml.rtw.pra.graphs.GraphCreator
-import edu.cmu.ml.rtw.users.matt.util.Dictionary
+import edu.cmu.ml.rtw.users.matt.util.MutableConcurrentDictionary
 import edu.cmu.ml.rtw.users.matt.util.FileUtil
 
-import scala.collection.JavaConverters._
 import scala.collection.mutable
 
 import java.io.File
@@ -15,9 +15,9 @@ object remove_edges_from_graph {
 
   def remove_edges(graph_dir: String, new_dir: String, split: String, use_triples: Boolean) {
     println("Reading node and edge dicts")
-    val node_dict = new Dictionary()
+    val node_dict = new MutableConcurrentDictionary()
     node_dict.setFromFile(graph_dir + "node_dict.tsv")
-    val edge_dict = new Dictionary()
+    val edge_dict = new MutableConcurrentDictionary()
     edge_dict.setFromFile(graph_dir + "edge_dict.tsv")
     println("Reading split")
     val to_remove = readSplit(split, node_dict, edge_dict, use_triples)
@@ -27,16 +27,16 @@ object remove_edges_from_graph {
 
   def readSplit(
       split_dir: String,
-      node_dict: Dictionary,
-      edge_dict: Dictionary,
+      node_dict: MutableConcurrentDictionary,
+      edge_dict: MutableConcurrentDictionary,
       use_triples: Boolean): Set[(Int, Int, Int)] = {
-    val relations = fileUtil.listDirectoryContents(split_dir).asScala
+    val relations = fileUtil.listDirectoryContents(split_dir)
       .map(x => split_dir + x + "/").filter(x => new File(x).isDirectory)
     val instances =
       for (relation <- relations;
-           instance_file <- fileUtil.listDirectoryContents(relation).asScala)
+           instance_file <- fileUtil.listDirectoryContents(relation))
              yield {
-               (relation.split("/").last, fileUtil.readLinesFromFile(relation + instance_file).asScala) }
+               (relation.split("/").last, fileUtil.readLinesFromFile(relation + instance_file)) }
     instances.flatMap(relation_instances => {
       val rel_index = if (use_triples) edge_dict.getIndex(relation_instances._1) else -1
       relation_instances._2.map(line => {
@@ -59,7 +59,7 @@ object remove_edges_from_graph {
     val new_edge_file = new_dir + "graph_chi/edges.tsv"
     val out = fileUtil.getFileWriter(new_edge_file)
     val old_edge_file = graph_dir + "graph_chi/edges.tsv"
-    fileUtil.readLinesFromFile(old_edge_file).asScala.par.filter(line => {
+    fileUtil.readLinesFromFile(old_edge_file).par.filter(line => {
       val fields = line.split("\t").map(_.toInt)
       val source = fields(0)
       val target = fields(1)
@@ -70,8 +70,8 @@ object remove_edges_from_graph {
       out.write("\n")
     })
     out.close()
-    val numShards = fileUtil.readLinesFromFile(graph_dir + "num_shards.tsv").get(0).toInt
-    new GraphCreator("/", "/").shardGraph(new_edge_file, numShards)
+    val numShards = fileUtil.readLinesFromFile(graph_dir + "num_shards.tsv")(0).toInt
+    new GraphCreator("/", "/", Outputter.justLogger).shardGraph(new_edge_file, numShards)
     println("Copying other files")
     val files_to_copy = Seq("node_dict.tsv", "edge_dict.tsv", "num_shards.tsv", "params.json")
     files_to_copy.map(f => fileUtil.copy(graph_dir + f, new_dir + f))

@@ -1,13 +1,12 @@
 package edu.cmu.ml.rtw.users.matt.one_off
 
-import edu.cmu.ml.rtw.users.matt.util.FileHelper
 import edu.cmu.ml.rtw.users.matt.util.FileUtil
+import edu.cmu.ml.rtw.pra.experiments.Outputter
 import edu.cmu.ml.rtw.pra.graphs.GraphBuilder
 
 import java.io.File
 
 import scala.collection.mutable
-import scala.collection.JavaConverters._
 
 object features_for_bishan {
   val fileUtil = new FileUtil()
@@ -15,7 +14,7 @@ object features_for_bishan {
   val outDirectory = "/home/mg1/data/bishan/split/"
 
   def main(args: Array[String]) {
-    val edgelists = FileHelper.recursiveListFiles(new File(graphBase), """.*\.edgelist$""".r)
+    val edgelists = fileUtil.recursiveListFiles(new File(graphBase), """.*\.edgelist$""".r)
     val relations = edgelists.par.map(edgelistFile => {
       val (graph, instances) = processEdgeListFile(edgelistFile)
       val lines = instances.map(sourceTarget => {
@@ -24,10 +23,10 @@ object features_for_bishan {
       val relation = edgelistFile.getName().replace(".edgelist", "")
       fileUtil.mkdirs(outDirectory + relation + "/")
       val outfile = outDirectory + relation + "/training.tsv"
-      fileUtil.writeLinesToFile(outfile, lines.asJava)
+      fileUtil.writeLinesToFile(outfile, lines)
       relation
     }).seq
-    fileUtil.writeLinesToFile(outDirectory + "relations_to_run.tsv", relations.asJava)
+    fileUtil.writeLinesToFile(outDirectory + "relations_to_run.tsv", relations)
   }
 
   def processEdgeListFile(file: File): (String, Seq[(String, String)]) = {
@@ -35,8 +34,8 @@ object features_for_bishan {
     // Not the most computationally efficient thing in the world to construct a graph, with
     // dictionaries and an odd internal representation, and then convert it back to triples and
     // write it out as strings.  But the code is easier, so that's what I'm doing for now.
-    val builder = new GraphBuilder
-    for (line <- fileUtil.readLinesFromFile(file).asScala) {
+    val builder = new GraphBuilder(Outputter.justLogger)
+    for (line <- fileUtil.readLinesFromFile(file)) {
       val fields = line.split(" ")
       val source = fields(0)
       val target = fields(1)

@@ -1,9 +1,7 @@
 package edu.cmu.ml.rtw.users.matt.one_off
 
-import edu.cmu.ml.rtw.users.matt.util.FileHelper
 import edu.cmu.ml.rtw.users.matt.util.FileUtil
 
-import scala.collection.JavaConverters._
 import scala.collection.mutable
 
 import java.io.File
@@ -31,7 +29,7 @@ object neil_experiments {
   val datasets = Seq("train", "test", "val")
 
   def main(args: Array[String]) {
-    val car_images = fileUtil.readLinesFromFile("/home/mg1/data/neil/car_images.tsv").asScala.toSet
+    val car_images = fileUtil.readLinesFromFile("/home/mg1/data/neil/car_images.tsv").toSet
     val suffix = "_car"
     copy_and_fix_data(car_images, suffix)
     createRelationSets(suffix)
@@ -92,34 +90,34 @@ object neil_experiments {
 
   def convertSpatialFile(file_type: String, allowed_images: Set[String], suffix: String) {
     println(s"Converting $file_type spatial relationship file")
-    val lines = fileUtil.readLinesFromFile(spatial_base + x_spatial_format.format(file_type)).asScala
+    val lines = fileUtil.readLinesFromFile(spatial_base + x_spatial_format.format(file_type))
     val new_lines = lines.par.filter(spatialFilter(allowed_images)).map(convertSpatialFileLine).seq
-    fileUtil.writeLinesToFile(data_base + my_spatial_format.format(file_type, suffix), new_lines.asJava)
+    fileUtil.writeLinesToFile(data_base + my_spatial_format.format(file_type, suffix), new_lines)
   }
 
   def convertClassifierFile(file_type: String, allowed_images: Set[String], suffix: String) {
     println(s"Converting $file_type classifier file")
-    val lines = fileUtil.readLinesFromFile(classifier_base + x_classifier_format.format(file_type)).asScala
+    val lines = fileUtil.readLinesFromFile(classifier_base + x_classifier_format.format(file_type))
     val new_lines = lines.par.filter(classifierFilter(allowed_images)).map(convertClassifierLine).seq
-    fileUtil.writeLinesToFile(data_base + my_classifier_format.format(file_type, suffix), new_lines.asJava)
+    fileUtil.writeLinesToFile(data_base + my_classifier_format.format(file_type, suffix), new_lines)
   }
 
   def convertGroundTruthFile(file_type: String, allowed_images: Set[String], suffix: String) {
     println(s"Converting $file_type ground truth file")
-    val lines = fileUtil.readLinesFromFile(ground_truth_base + x_ground_truth_format.format(file_type)).asScala
+    val lines = fileUtil.readLinesFromFile(ground_truth_base + x_ground_truth_format.format(file_type))
     val new_lines = lines.par.filter(groundTruthFilter(allowed_images)).map(convertGroundTruthLine).seq
-    fileUtil.writeLinesToFile(data_base + my_ground_truth_format.format(file_type, suffix), new_lines.asJava)
+    fileUtil.writeLinesToFile(data_base + my_ground_truth_format.format(file_type, suffix), new_lines)
   }
 
   def convertNeilClassifierFile(file_type: String, allowed_images: Set[String], suffix: String) {
     println(s"Converting $file_type neil classifier files")
     val neil_base = neil_classifier_base + x_neil_classifier_format.format(file_type)
-    val files = FileHelper.recursiveListFiles(new File(neil_base), """.*txt""".r)
+    val files = fileUtil.recursiveListFiles(new File(neil_base), """.*txt""".r)
     val new_lines = files.par.flatMap(file => {
-      val lines = fileUtil.readLinesFromFile(file).asScala
+      val lines = fileUtil.readLinesFromFile(file)
       lines.filter(neilClassifierFilter(allowed_images)).map(convertNeilClassifierLine)
     }).seq
-    fileUtil.writeLinesToFile(data_base + my_neil_classifier_format.format(file_type, suffix), new_lines.asJava)
+    fileUtil.writeLinesToFile(data_base + my_neil_classifier_format.format(file_type, suffix), new_lines)
   }
 
   def copy_and_fix_data(allowed_images: Set[String] = Set(), suffix: String = "") {
@@ -142,7 +140,7 @@ object neil_experiments {
         val relset_file = relset_base + file_type + "_" + dataset + suffix + ".json"
         val relation_file = data_base + file_type + "_" + dataset + suffix + ".tsv"
         val contents = template.format(relation_file)
-        fileUtil.writeLinesToFile(relset_file, contents.split("\n").toList.asJava)
+        fileUtil.writeLinesToFile(relset_file, contents.split("\n").toList)
       }
     }
 

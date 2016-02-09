@@ -2,7 +2,6 @@ package edu.cmu.ml.rtw.users.matt.one_off
 
 import edu.cmu.ml.rtw.users.matt.util.FileUtil
 
-import scala.collection.JavaConverters._
 import scala.collection.mutable
 
 object multilingual_svo_experiments {
@@ -68,7 +67,7 @@ object multilingual_svo_experiments {
 
   def reformat_data(in_file: String, out_file: String) {
     val out = fileUtil.getFileWriter(out_file)
-    for (line <- fileUtil.readLinesFromBZ2File(in_file).asScala) {
+    for (line <- fileUtil.readLinesFromBZ2File(in_file)) {
       val fields = line.split(" \\|\\|\\| ")
       if (fields.size != 9) {
         println(line)
@@ -91,7 +90,7 @@ object multilingual_svo_experiments {
   def count_vps() {
     println("Reading SVO files")
     languages.par.foreach(language => {
-      val vps = fileUtil.readLinesFromFile(s"${base}${language}_svo.tsv").asScala.map(line => {
+      val vps = fileUtil.readLinesFromFile(s"${base}${language}_svo.tsv").map(line => {
         val fields = line.split("\t")
         (fields(1), 1)
       }).groupBy(_._1).mapValues(_.map(_._2).sum)
@@ -104,7 +103,7 @@ object multilingual_svo_experiments {
   def find_aliases() {
     println("Reading SVO files")
     val np_map = languages.par.flatMap(language => {
-      val v = fileUtil.readLinesFromFile(s"${base}${language}_svo.tsv").asScala.flatMap(line => {
+      val v = fileUtil.readLinesFromFile(s"${base}${language}_svo.tsv").flatMap(line => {
         val fields = line.split("\t")
         val s_words = fields(0).split(" ").map(x => (x, (fields(0), language)))
         val o_words = fields(2).split(" ").map(x => (x, (fields(2), language)))
@@ -116,7 +115,7 @@ object multilingual_svo_experiments {
     println(s"Found ${np_map.size} phrases to check")
     val found = new mutable.HashMap[String, mutable.HashSet[String]]
     println("Reading alias file into memory")
-    val lines = fileUtil.readLinesFromFile(aliasFile).asScala
+    val lines = fileUtil.readLinesFromFile(aliasFile)
     var i = new java.util.concurrent.atomic.AtomicInteger
     println("Processing alias file lines")
     lines.par.foreach(line => {
@@ -141,20 +140,20 @@ object multilingual_svo_experiments {
     println(s"Found: ${found.size}")
     languages.par.foreach(language => {
       fileUtil.writeLinesToFile(s"${base}found_aliases_${language}.tsv",
-        found.getOrElse(language, Set[String]()).toList.sorted.asJava)
+        found.getOrElse(language, Set[String]()).toList.sorted)
     })
   }
 
   def find_alias_pairs() {
     println("Reading contains alias files")
     val alias_pairs = languages.par.flatMap(language => {
-      val np_to_alias = fileUtil.readLinesFromFile(s"${base}found_aliases_${language}.tsv").asScala.map(line => {
+      val np_to_alias = fileUtil.readLinesFromFile(s"${base}found_aliases_${language}.tsv").map(line => {
         val fields = line.split("\t")
         val np = fields(0)
         val alias = fields(2)
         (np -> alias)
       }).groupBy(_._1).mapValues(_.map(_._2).toSeq)
-      fileUtil.readLinesFromFile(s"${base}${language}_svo.tsv").asScala.flatMap(line => {
+      fileUtil.readLinesFromFile(s"${base}${language}_svo.tsv").flatMap(line => {
         val fields = line.split("\t")
         val s = fields(0)
         val o = fields(2)
@@ -170,16 +169,14 @@ object multilingual_svo_experiments {
     fileUtil.writeLinesToFile(s"${base}alias_pairs.tsv", alias_pairs.map(x => {
         val l = x._2.mkString(",")
         s"${x._1._1},${x._1._2}\t${l}"
-    }).toList.sorted.asJava)
+    }).toList.sorted)
   }
 
   def find_mids() {
     println("Reading alias file")
     val aliases = new mutable.HashMap[String, mutable.HashSet[String]]
-    var line = ""
     var i = 0
-    var reader = fileUtil.getBufferedReader(aliasFile)
-    while ({ line = reader.readLine; line != null }) {
+    for (line <- fileUtil.getLineIterator(aliasFile)) {
       i += 1
       if (i % 1000000 == 0) println(i)
       val fields = line.split("\t")
@@ -189,7 +186,7 @@ object multilingual_svo_experiments {
     }
 
     println("Reading alias pairs file")
-    val alias_pairs = fileUtil.readLinesFromFile(s"${base}alias_pairs.tsv").asScala.map(line => {
+    val alias_pairs = fileUtil.readLinesFromFile(s"${base}alias_pairs.tsv").map(line => {
       val fields = line.split("\t")
       val aliases = fields(0)
       val langs = fields(1)
@@ -201,9 +198,8 @@ object multilingual_svo_experiments {
 
     println("Reading freebase file and checking for alias pairs")
     i = 0
-    reader = fileUtil.getBufferedReader(freebaseFile)
     val mid_pairs = new mutable.HashMap[(String, String), mutable.HashSet[(String, String)]]
-    while ({ line = reader.readLine; line != null }) {
+    for (line <- fileUtil.getLineIterator(freebaseFile)) {
       i += 1
       if (i % 1000000 == 0) println(i)
       val fields = line.split("\t")
@@ -238,7 +234,7 @@ object multilingual_svo_experiments {
         (relation, count)
       }).toList.sortBy(-_._2)
       fileUtil.writeLinesToFile(s"${base}${language}_found_relations.tsv",
-        relation_counts.map(x => s"${x._1}\t${x._2}").asJava)
+        relation_counts.map(x => s"${x._1}\t${x._2}"))
       language_results._2.foreach(relation_mids => {
         val relation = relation_mids._1._2
         val fixed = relation.replace("/", "_")
@@ -246,7 +242,7 @@ object multilingual_svo_experiments {
         val dirname = s"${base}${language}_mids/"
         fileUtil.mkdirs(dirname)
         val filename = s"${dirname}${fixed}"
-        fileUtil.writeLinesToFile(filename, mids.map(pair => s"${pair._1}\t${pair._2}").toList.asJava)
+        fileUtil.writeLinesToFile(filename, mids.map(pair => s"${pair._1}\t${pair._2}").toList)
       })
     })
   }
@@ -257,7 +253,7 @@ object multilingual_svo_experiments {
       val instances = languages.flatMap(language => {
         val mid_file = s"${base}${language}_mids/${fixed}"
         if (fileUtil.fileExists(mid_file))
-          fileUtil.readLinesFromFile(mid_file).asScala
+          fileUtil.readLinesFromFile(mid_file)
         else
           Seq()
       }).toSet
@@ -275,9 +271,9 @@ object multilingual_svo_experiments {
       val num_training = (shuffled.size * percent_training).toInt
       val training = shuffled.take(num_training)
       val testing = shuffled.drop(num_training)
-      fileUtil.writeLinesToFile(s"${relation_dir}training.tsv", training.asJava)
-      fileUtil.writeLinesToFile(s"${relation_dir}testing.tsv", testing.asJava)
-      fileUtil.writeLinesToFile(s"${relation_dir}all.tsv", shuffled.asJava)
+      fileUtil.writeLinesToFile(s"${relation_dir}training.tsv", training)
+      fileUtil.writeLinesToFile(s"${relation_dir}testing.tsv", testing)
+      fileUtil.writeLinesToFile(s"${relation_dir}all.tsv", shuffled)
     })
   }
 
@@ -288,7 +284,7 @@ object multilingual_svo_experiments {
         val fixed = relation.replace("/", "_")
         val mid_file = s"${base}${language}_mids/${fixed}"
         if (fileUtil.fileExists(mid_file)) {
-          val instances = fileUtil.readLinesFromFile(mid_file).asScala
+          val instances = fileUtil.readLinesFromFile(mid_file)
           val shuffled = random.shuffle(instances.toList).take(2000)
           val num_training = (shuffled.size * percent_training).toInt
           val training = shuffled.take(num_training)
@@ -311,15 +307,15 @@ object multilingual_svo_experiments {
       val language = entry._1
       val single_language_split_base = better_split_base + language + "/single_language/"
       fileUtil.mkdirs(single_language_split_base)
-      fileUtil.writeLinesToFile(s"${single_language_split_base}relations_to_run.tsv", relations.asJava)
+      fileUtil.writeLinesToFile(s"${single_language_split_base}relations_to_run.tsv", relations)
       entry._2.foreach(relation_instances => {
         val relation = relation_instances._1
         val training = relation_instances._2._1
         val testing = relation_instances._2._2
         val relation_dir = single_language_split_base + relation.replace("/", "_") + "/"
         fileUtil.mkdirs(relation_dir)
-        fileUtil.writeLinesToFile(s"${relation_dir}training.tsv", training.asJava)
-        fileUtil.writeLinesToFile(s"${relation_dir}testing.tsv", testing.asJava)
+        fileUtil.writeLinesToFile(s"${relation_dir}training.tsv", training)
+        fileUtil.writeLinesToFile(s"${relation_dir}testing.tsv", testing)
       })
       create_spec_file("svo", language, "single_language")
       create_spec_file("kb", language, "single_language")
@@ -328,15 +324,15 @@ object multilingual_svo_experiments {
       create_spec_file("kb_all_svo", language, "single_language")
       val all_language_split_base = better_split_base + language + "/all_languages/"
       fileUtil.mkdirs(all_language_split_base)
-      fileUtil.writeLinesToFile(s"${all_language_split_base}relations_to_run.tsv", relations.asJava)
+      fileUtil.writeLinesToFile(s"${all_language_split_base}relations_to_run.tsv", relations)
       entry._2.foreach(relation_instances => {
         val relation = relation_instances._1
         val testing = relation_instances._2._2
         val training = (all_training(relation).toSet -- testing).toList
         val relation_dir = all_language_split_base + relation.replace("/", "_") + "/"
         fileUtil.mkdirs(relation_dir)
-        fileUtil.writeLinesToFile(s"${relation_dir}training.tsv", training.asJava)
-        fileUtil.writeLinesToFile(s"${relation_dir}testing.tsv", testing.asJava)
+        fileUtil.writeLinesToFile(s"${relation_dir}training.tsv", training)
+        fileUtil.writeLinesToFile(s"${relation_dir}testing.tsv", testing)
       })
       create_spec_file("svo", language, "all_languages")
       create_spec_file("kb", language, "all_languages")
@@ -424,7 +420,7 @@ object multilingual_svo_experiments {
       val instances = (languages.toSet - "french").flatMap(language => {
         val mid_file = s"${base}${language}_mids/${fixed}"
         if (fileUtil.fileExists(mid_file))
-          fileUtil.readLinesFromFile(mid_file).asScala
+          fileUtil.readLinesFromFile(mid_file)
         else
           Seq()
       }).toSet
@@ -435,7 +431,7 @@ object multilingual_svo_experiments {
       val mid_file = s"${base}french_mids/${fixed}"
       val instances = {
         if (fileUtil.fileExists(mid_file))
-          fileUtil.readLinesFromFile(mid_file).asScala
+          fileUtil.readLinesFromFile(mid_file)
         else
           Seq()
       }
@@ -455,26 +451,26 @@ object multilingual_svo_experiments {
       if (test_instances.size > 0) {
         val relation_dir = french_split_base + relation.replace("/", "_") + "/"
         fileUtil.mkdirs(relation_dir)
-        fileUtil.writeLinesToFile(s"${relation_dir}training.tsv", train_instances.toList.asJava)
-        fileUtil.writeLinesToFile(s"${relation_dir}testing.tsv", test_instances.asJava)
+        fileUtil.writeLinesToFile(s"${relation_dir}training.tsv", train_instances.toList)
+        fileUtil.writeLinesToFile(s"${relation_dir}testing.tsv", test_instances)
         Seq(relation)
       } else {
         Seq()
       }
     }).seq.toList
-    fileUtil.writeLinesToFile(s"${french_split_base}relations_to_run.tsv", used_relations.asJava)
+    fileUtil.writeLinesToFile(s"${french_split_base}relations_to_run.tsv", used_relations)
   }
 
   def filter_aliases() {
     println("Filtering alias files")
     languages.par.foreach(language => {
       println(s"Reading ${language} alias file")
-      val lines = fileUtil.readLinesFromFile(s"${base}found_aliases_${language}.tsv").asScala
+      val lines = fileUtil.readLinesFromFile(s"${base}found_aliases_${language}.tsv")
       println(s"Filtering ${language} alias file")
       val filtered = lines.par.filter(shouldKeepLine).seq
       println(s"Kept ${filtered.size} out of ${lines.size} NP aliases")
       println(s"Writing filtered ${language} alias file to disk")
-      fileUtil.writeLinesToFile(s"${base}filtered_aliases_${language}.tsv", filtered.asJava)
+      fileUtil.writeLinesToFile(s"${base}filtered_aliases_${language}.tsv", filtered)
     })
   }
 
@@ -482,7 +478,7 @@ object multilingual_svo_experiments {
     println("Counting aliases in alias files")
     languages.par.foreach(language => {
       println(s"Reading ${language} alias file")
-      val lines = fileUtil.readLinesFromFile(s"${base}filtered_aliases_${language}.tsv").asScala
+      val lines = fileUtil.readLinesFromFile(s"${base}filtered_aliases_${language}.tsv")
       val alias_map = lines.par.map(_.split("\t").last).groupBy(alias => alias).mapValues(_.size)
       val sorted = alias_map.toList.sortBy(entry => (-entry._2, entry._1))
       println(s"\n\nTop aliases in ${language}")
@@ -528,7 +524,7 @@ object multilingual_svo_experiments {
         val relset_file = relset_base + file_type._1.format(language)
         val relation_file = base + file_type._2.format(language)
         val contents = template.format(relation_file)
-        fileUtil.writeLinesToFile(relset_file, contents.split("\n").toList.asJava)
+        fileUtil.writeLinesToFile(relset_file, contents.split("\n").toList)
       }
     }
 
@@ -542,7 +538,7 @@ object multilingual_svo_experiments {
       val relset_file = relset_base + file_type._1.format(language)
       val relation_file = base + file_type._2.format(language)
       val contents = single_relation_template.format(relation_file)
-      fileUtil.writeLinesToFile(relset_file, contents.split("\n").toList.asJava)
+      fileUtil.writeLinesToFile(relset_file, contents.split("\n").toList)
     }
 
     val language_pairs = Seq(
@@ -561,7 +557,7 @@ object multilingual_svo_experiments {
       val relset_file = relset_base + pair + ".json"
       val relation_file = translationBase + pair
       val contents = template.format(relation_file)
-      fileUtil.writeLinesToFile(relset_file, contents.split("\n").toList.asJava)
+      fileUtil.writeLinesToFile(relset_file, contents.split("\n").toList)
     }
   }
 }
