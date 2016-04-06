@@ -2,8 +2,8 @@ package edu.cmu.ml.rtw.users.matt.one_off
 
 import edu.cmu.ml.rtw.pra.experiments.Outputter
 import edu.cmu.ml.rtw.pra.graphs.GraphCreator
-import edu.cmu.ml.rtw.users.matt.util.MutableConcurrentDictionary
-import edu.cmu.ml.rtw.users.matt.util.FileUtil
+import com.mattg.util.MutableConcurrentDictionary
+import com.mattg.util.FileUtil
 
 import scala.collection.mutable
 

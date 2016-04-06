@@ -1,6 +1,6 @@
 package edu.cmu.ml.rtw.users.matt.one_off
 
-import edu.cmu.ml.rtw.users.matt.util.FileUtil
+import com.mattg.util.FileUtil
 
 object generate_tuning_specs {
 
