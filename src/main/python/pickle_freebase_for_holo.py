@@ -39,9 +39,9 @@ def getTriplesFromFile(filename, entityDict, relDict):
         source = fields[0]
         relation = fields[1]
         target = fields[2]
-        sourceIndex = entityDict.getIndex(source)
-        targetIndex = entityDict.getIndex(target)
-        relationIndex = relDict.getIndex(relation)
+        sourceIndex = entityDict.getIndex(source) - 1
+        targetIndex = entityDict.getIndex(target) - 1
+        relationIndex = relDict.getIndex(relation) - 1
         triple = (sourceIndex, targetIndex, relationIndex)
         triples.append(triple)
     return triples
