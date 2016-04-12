@@ -42,7 +42,8 @@ def getTriplesFromFile(filename, entityDict, relDict):
         sourceIndex = entityDict.getIndex(source)
         targetIndex = entityDict.getIndex(target)
         relationIndex = relDict.getIndex(relation)
-        triples += (sourceIndex, targetIndex, relationIndex)
+        triple = (sourceIndex, targetIndex, relationIndex)
+        triples.append(triple)
     return triples
 
 
