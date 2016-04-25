@@ -9,6 +9,8 @@ import scala.collection.mutable
 
 import java.io.File
 
+import org.json4s.JNothing
+
 object remove_edges_from_graph {
 
   val fileUtil = new FileUtil
@@ -71,7 +73,7 @@ object remove_edges_from_graph {
     })
     out.close()
     val numShards = fileUtil.readLinesFromFile(graph_dir + "num_shards.tsv")(0).toInt
-    new GraphCreator("/", "/", Outputter.justLogger).shardGraph(new_edge_file, numShards)
+    new GraphCreator("/", JNothing, Outputter.justLogger, fileUtil).shardGraph(new_edge_file, numShards)
     println("Copying other files")
     val files_to_copy = Seq("node_dict.tsv", "edge_dict.tsv", "num_shards.tsv", "params.json")
     files_to_copy.map(f => fileUtil.copy(graph_dir + f, new_dir + f))
