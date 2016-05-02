@@ -13,7 +13,7 @@ object find_freebase_mediators {
   val mediatorsFile = "/home/mattg/clone/pra/src/main/resources/freebase_mediators.tsv"
   val mediatorRelationsFile = "/home/mattg/clone/pra/src/main/resources/freebase_mediator_relations.tsv"
 
-  def main(args: Array[String]) {
+  def NOT_main(args: Array[String]) {
     val domains = fileUtil.readStringPairsFromFile(domainsFile).toMap
     val ranges = fileUtil.readStringPairsFromFile(rangesFile).toMap
     val mediators = readMediatorJson()

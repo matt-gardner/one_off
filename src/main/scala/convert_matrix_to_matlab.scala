@@ -11,7 +11,7 @@ object convert_matrix_to_matlab {
   val wordDictionary = new MutableConcurrentDictionary
   val verbDictionary = new MutableConcurrentDictionary
 
-  def main(args: Array[String]) {
+  def NOT_main(args: Array[String]) {
     val out = fileUtil.getFileWriter(outfile)
     for (line <- fileUtil.getLineIterator(tripleFile)) {
       val fields = line.split("\t")
