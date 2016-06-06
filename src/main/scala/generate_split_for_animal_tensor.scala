@@ -1,12 +1,13 @@
 import com.mattg.util.FileUtil
 
-object generate_split_for_fb15k {
+object generate_split_for_animal_tensor {
   val fileUtil = new FileUtil
 
-  val trainFile = "/home/mattg/data/freebase/fb15k_train.tsv"
-  val validFile = "/home/mattg/data/freebase/fb15k_valid.tsv"
-  val testFile = "/home/mattg/data/freebase/fb15k_test.tsv"
-  val splitDir = "/home/mattg/pra/splits/fb15k/"
+  val trainFile = "/home/mattg/data/animal_tensor_kbc/HPzootrain3.txt"
+  val validFile = "/home/mattg/data/animal_tensor_kbc/HPzoodev3.txt"
+  val testFile = "/home/mattg/data/animal_tensor_kbc/HPzootest3.txt"
+  val testFileWithNegatives = "/home/mattg/data/animal_tensor_kbc/hole_top_10s.tsv"
+  val splitDir = "/home/mattg/pra/splits/animals/"
   val relationsToRunFile = splitDir + "relations_to_run.tsv"
 
   def main(args: Array[String]) {
@@ -21,9 +22,11 @@ object generate_split_for_fb15k {
   def getTriplesFromFiles(files: Seq[String]) = {
     val triples = files.flatMap(file => fileUtil.mapLinesFromFile(file, (line: String) => {
       val fields = line.split("\t")
-      val subj = fields(0)
-      val relation = fields(1)
-      val obj = fields(2)
+      val triple = fields(0)
+      val triple_fields = triple.split(",")
+      val subj = triple_fields(0)
+      val relation = triple_fields(1)
+      val obj = triple_fields(2)
       (relation, subj, obj)
     }))
     triples.groupBy(_._1).mapValues(_.map(triple => (triple._2, triple._3)))
