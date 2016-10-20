@@ -19,6 +19,12 @@ libraryDependencies ++= Seq(
 
 testOptions in Test += Tests.Argument(TestFrameworks.ScalaTest, "-oD")
 
+fork := true
+
+cancelable in Global := true
+
+javaOptions ++= Seq("-Xmx100g", "-Xms100g")
+
 instrumentSettings
 
 jacoco.settings

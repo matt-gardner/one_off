@@ -2,31 +2,31 @@ import com.mattg.util.FileUtil
 
 import java.io.File
 
-object merge_fb15k_split {
+object merge_split {
   val fileUtil = new FileUtil
 
-  val originalTestDir = "/home/mattg/pra/splits/hanie/"
-  val augmentedTestDir = "/home/mattg/pra/splits/hanie_with_negatives/"
-  val relationsFile = "/home/mattg/pra/splits/hanie/relations_to_run.tsv"
-  val outfile = "/home/mattg/data/freebase/fb15k_with_samples_negatives.tsv"
+  val originalTestDir = "/home/mattg/pra/splits/animals/"
+  val augmentedTestDir = "/home/mattg/pra/splits/animals_with_negatives/"
+  val relationsFile = "/home/mattg/pra/splits/animals_with_negatives/relations_to_run.tsv"
+  val outfile = "/home/mattg/data/animal_tensor_kbc/merged_training_data.tsv"
 
   def main(args: Array[String]) {
     val relations = fileUtil.readLinesFromFile(relationsFile)
     val relationMap = relations.map(r => (r.replace("/", "_") -> r)).toMap
-    val originalTriples = fileUtil.recursiveListFiles(new File(originalTestDir), """testing\.tsv$""".r).flatMap(file => {
+    val originalTriples = fileUtil.recursiveListFiles(new File(originalTestDir), """training\.tsv$""".r).flatMap(file => {
       val nodePairs = fileUtil.readStringPairsFromFile(file.getAbsolutePath())
       val relationWithUnderscores = file.getParentFile().getName()
-      val relation = relationMap(relationWithUnderscores)
+      val relation = relationMap.getOrElse(relationWithUnderscores, relationWithUnderscores)
       nodePairs.map(np => (np._1, relation, np._2, true))
     }).toSet
-    val augmentedTriples = fileUtil.recursiveListFiles(new File(augmentedTestDir), """testing\.tsv$""".r).flatMap(file => {
+    val augmentedTriples = fileUtil.recursiveListFiles(new File(augmentedTestDir), """training\.tsv$""".r).flatMap(file => {
       val relationWithUnderscores = file.getParentFile().getName()
       val relation = relationMap(relationWithUnderscores)
       fileUtil.getLineIterator(file).map(line => {
         val fields = line.split("\t")
         val source = fields(0)
         val target = fields(1)
-        val isPositive = fields(2) == "1"
+        val isPositive = if (fields.length > 2) fields(2) == "1" else true
         (source, relation, target, isPositive)
       }).toSet
     }).toSet
